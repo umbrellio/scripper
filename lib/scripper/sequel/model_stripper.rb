@@ -42,9 +42,15 @@ module Scripper
 
         def build_association_fields_from_array(object, associations)
           associations.reduce({}) do |acc, association|
-            acc.merge(
-              association.to_sym => object.public_send(association).map { |obj| strip(obj) },
-            )
+            association_value = object.public_send(association)
+            stripped_association_value =
+              if association_value.is_a?(Array)
+                association_value.map { |obj| strip(obj) }
+              else
+                strip(association_value)
+              end
+
+            acc.merge(association.to_sym => stripped_association_value)
           end
         end
 

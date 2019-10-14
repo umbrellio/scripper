@@ -134,31 +134,46 @@ RSpec.describe Scripper::Sequel do
       cookie_model.create(user_id: user.id, value: "job")
     end
 
-    context "load all associated records" do
-      subject(:stripped_user) { described_class.strip(user, with_associations: %i[cookies]) }
+    let!(:role) do
+      role_model.create(user_id: user.id, title: "volk")
+    end
 
-      it "loads all associated cookies and strips them" do
-        expect(stripped_user.cookies).to be_an(Array)
-        expect(stripped_user.cookies.count).to eq(2)
+    context "one(many)-to-many" do
+      context "load all associated records" do
+        subject(:stripped_user) { described_class.strip(user, with_associations: %i[cookies]) }
 
-        expect(stripped_user.cookies.first).to be_an(Struct)
-        expect(stripped_user.cookies.first).to have_attributes(
-          user_id: user.id,
-          value: "nice",
-        )
+        it "loads all associated cookies and strips them" do
+          expect(stripped_user.cookies).to be_an(Array)
+          expect(stripped_user.cookies.count).to eq(2)
+
+          expect(stripped_user.cookies.first).to be_a(Struct)
+          expect(stripped_user.cookies.first).to have_attributes(
+            user_id: user.id,
+            value: "nice",
+          )
+        end
+      end
+
+      context "select only some records" do
+        subject(:stripped_user) do
+          described_class.strip(user, with_associations: { cookies: -> (ds) { ds.limit(1) } })
+        end
+
+        it "applies specified conditions to associations" do
+          expect(stripped_user.cookies).to be_an(Array)
+          expect(stripped_user.cookies.count).to eq(1)
+
+          expect(stripped_user.cookies.first).to be_an(Struct)
+        end
       end
     end
 
-    context "select only some records" do
-      subject(:stripped_user) do
-        described_class.strip(user, with_associations: { cookies: -> (ds) { ds.limit(1) } })
-      end
+    context "one-to-one" do
+      subject(:stripped_user) { described_class.strip(user, with_associations: %i[role]) }
 
-      it "applies specified conditions to associations" do
-        expect(stripped_user.cookies).to be_an(Array)
-        expect(stripped_user.cookies.count).to eq(1)
-
-        expect(stripped_user.cookies.first).to be_an(Struct)
+      it "loads the role" do
+        expect(stripped_user.role).to be_a(Struct)
+        expect(stripped_user.role.title).to eq("volk")
       end
     end
   end

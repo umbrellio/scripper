@@ -24,9 +24,12 @@ RSpec.shared_context "sequel context" do
 
   class User < Sequel::Model(DB[:users])
     one_to_many :cookies, class: "Cookie"
+    one_to_one :role, class: "Role"
   end
 
   class Cookie < Sequel::Model(DB[:cookies]); end
+
+  class Role < Sequel::Model(DB[:roles]); end
 
   let(:user_model) do
     User
@@ -34,5 +37,9 @@ RSpec.shared_context "sequel context" do
 
   let(:cookie_model) do
     Cookie
+  end
+
+  let(:role_model) do
+    Role
   end
 end
